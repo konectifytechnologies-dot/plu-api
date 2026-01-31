@@ -8,8 +8,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
-
 Route::post('/debug-csrf', function () {
     return response()->json([
         'xsrf_cookie' => request()->cookie('XSRF-TOKEN'),

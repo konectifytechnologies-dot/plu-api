@@ -13,6 +13,9 @@ Route::middleware('throttle:auth')->group(function () {
 Route::middleware(['auth:sanctum', 'throttle:authenticated'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('me', [AuthController::class, 'me']);
+    Route::post('/landlord', [AuthController::class, 'addLandlord']);
+    Route::get('/landlords', [AuthController::class, 'landlords']);
+    Route::get('/agent/{id}', [AuthController::class, 'show']);
 });
 
 

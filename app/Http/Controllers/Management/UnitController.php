@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Resources\TenantResource;
+use App\Http\Resources\UnitResource;
 
 class UnitController extends ApiController
 {
@@ -26,6 +28,41 @@ class UnitController extends ApiController
     public function index()
     {
         //
+    }
+
+    public function propertyTenants(string $id)
+    {
+        try{
+            $items = Tenancy::with([
+                                    'user'=> function ($q) {
+                                        $q->where('is_deleted', false); // only active tenancies
+                                    }, 
+                                    'property:id,name',
+                                    'unit:id,name'
+                                ])->where(['property_id'=>$id, 'status'=>'active'])
+                                ->get();
+            $tenants = TenantResource::collection($items);
+            return response($tenants, 200);
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
+    }
+
+    public function propertyUnits(string $id)
+    {
+        try{
+            $items = Unit::with([
+                            'property:id,name,has_service_charge,service_charge',
+                            'tenancy.user:id,name,number'
+                            ])->where('property_id', $id)->get();
+            $units = UnitResource::collection($items);
+            return response($units, 200);
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
     }
 
     /**
@@ -152,7 +189,6 @@ class UnitController extends ApiController
                 return $this->error('This Unit is already occupied');
             }
             DB::transaction(function () use ($data,$id, &$errors, $user, &$response) {
-                
                 $user->update([
                     'name'=>$data['name'],
                     'email'=>$data['email'],
@@ -170,11 +206,35 @@ class UnitController extends ApiController
         }
     }
 
+    
+
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Unit $unit)
+    public function vacateTenant(Request $request, string $id)
     {
-        //
+        try{
+            $user = $request->user();
+            if($user->role == 'tenant'){
+                return $this->unauthorized('Cannot vacate tenant');
+            }
+
+            $tenant = User::find($id);
+            if(!$tenant){
+                return $this->notFound('Tenant not found');
+            }
+            $response = null;
+            DB::transaction(function () use ($id, $tenant, &$response) {
+                $tenant->update(['is_deleted'=>true]);
+                $tenancy = Tenancy::where('user_id', $id)->delete();
+            });
+
+            return $this->success(null, 'Tenant Vacated');
+
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
     }
 }

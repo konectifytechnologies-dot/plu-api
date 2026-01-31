@@ -2,19 +2,85 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Api\ApiController;
+use Exception;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PropertyResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Hash;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function landlords(Request $request)
+    {
+        try{
+        $user = $request->user();
+        if($user->role !== 'agent'){
+            return $this->unauthorized('Cannot add landlord: You do not have permision to do so');
+        }
+
+        $items = User::with('agent:id,email,name,number')
+                            ->where('agent_id', $user->id)
+                            ->get();
+        $landlords = UserResource::collection($items);
+        return response($landlords, 200);
+
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
+    }
+
+     public function show(Request $request, string $agentId)
+    {
+        $agent = User::where('id', $agentId)
+            ->whereIn('role', ['landlord', 'agent'])
+            ->with([
+                'agentProperties.units.tenancy.user', // tenants
+                'agentProperties',
+                'landlordProperties',
+                'landlords'
+            ])
+            ->firstOrFail();
+
+        $properties = $agent->role == 'agent' ? $agent->agentProperties : $agent->landlordProperties;
+        $landlords = $agent->role == 'agent' ? $agent->landlords : null;
+
+        // ---- Counts ----
+        $totalProperties = $properties->count();
+
+        $totalUnits = $properties->sum(fn ($property) =>
+            $property->units->count()
+        );
+
+        $totalTenants = $properties->sum(fn ($property) =>
+            $property->units->filter(fn ($unit) =>
+                $unit->tenancy !== null
+            )->count()
+        );
+
+        // Unique landlords across all properties
+        $totalLandlords = !is_null('landlords') ? $landlords->count() : null;
+
+        return response([
+            'agent' => new UserResource($agent),
+            'stats' => [
+                'total_properties' => $totalProperties,
+                'total_landlords'  => $totalLandlords,
+                'total_units'      => $totalUnits,
+                'total_tenants'    => $totalTenants,
+            ],
+            'properties'=>PropertyResource::collection($properties)
+        ]);
+    }
+    
+
+
     public function register(Request $request)
     {
          $validated = $request->validate([
@@ -84,9 +150,62 @@ class AuthController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function addLandlord(Request $request, User $user)
     {
-        //
+        try{
+         $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'number'=>['required', 'string', 'max:12', 'unique:users'],
+            'additional_data'=>['nullable', 'array'],
+         ]);
+        $user = $request->user();
+            if($user->role !== 'agent'){
+                return $this->unauthorized('Cannot add landlord: You do not have permision to do so');
+        }
+         $password = Str::password(8);
+         $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'number'=>$request->number,
+            'role'=>'landlord',
+            'agent_id'=>$user->id,
+            'password' => Hash::make($password),
+            'additional_data'=>$request->additional_data ?? null
+        ]);
+        return $this->success($user, 'Landlord created successfully');
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
+    }
+
+    public function updateLandlord(Request $request, string $id)
+    {
+        try{
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'number'=>['required', 'string', 'max:12', 'unique:users']
+         ]);
+        $user = $request->user();
+            if($user->role !== 'agent'){
+                return $this->unauthorized('Cannot add landlord: You do not have permision to do so');
+        }
+        $landlord = User::find($id);
+        if(!$landlord){
+            return $this->notFound('landlord not found');
+        }
+        $landlord->update([
+            'name'=>$request->name,
+            'email'=>$request->email,
+            'number'=>$request->number
+        ]);
+        return $this->success($landlord->fresh(), 'Landlord updated successfully');
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
     }
 
     /**

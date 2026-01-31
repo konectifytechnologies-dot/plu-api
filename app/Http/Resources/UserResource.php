@@ -21,6 +21,8 @@ class UserResource extends JsonResource
             'number'=>$this->number,
             'role'=>$this->role,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
+            'agent'=>!is_null($this->agent_id) ? $this->agent?->name : null,
+            'additional_data'=>!is_null($this->additional_data) ? $this->additional_data : null,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

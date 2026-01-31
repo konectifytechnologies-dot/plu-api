@@ -73,9 +73,6 @@ class PropertyController extends ApiController
 
         DB::transaction(function () use ($data, $user, &$response) {
             $isAgent = $user->role == 'agent';
-            /** -------------------------
-             * Create property
-             * ------------------------ */
             $property = Property::create([
                 'name'    => $data['name'],
                 'picture'=>$data['picture'] ?? null,

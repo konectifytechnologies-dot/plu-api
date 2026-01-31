@@ -33,8 +33,21 @@ class User extends Authenticatable
         'role',
         'password',
         'additional_data',
-        'agent_id'
+        'agent_id',
+        'is_deleted'
     ];
+
+    
+
+    public function landlords()
+    {
+        return $this->hasMany(User::class, 'agent_id', 'id');
+    }
+
+    public function agent()
+    {
+        return $this->belongsTo(User::class, 'agent_id', 'id');
+    }
 
     public function properties()
     {
@@ -85,6 +98,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'additional_data'=>'array',
+            'is_deleted'=>'boolean',
         ];
     }
 }
