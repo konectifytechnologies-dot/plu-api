@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('start_date')->default(now());
             $table->date('end_date')->nullable();
             $table->enum('status', ['active', 'terminated', 'pending']);
+            
             $table->timestamps();
         });
     }

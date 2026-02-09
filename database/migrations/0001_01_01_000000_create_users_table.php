@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('number')->unique();
             $table->enum('role', ['agent', 'landlord', 'tenant']);
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('agent_id', 26)->nullable();
+            $table->foreign('agent_id')->references('id')->on('users')->onDelete('cascade');
+            $table->boolean('is_deleted')->nullable()->default(0);
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

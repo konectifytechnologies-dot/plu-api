@@ -15,11 +15,7 @@ class CheckAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        logger('SESSION DEBUG', [
-            'url' => $request->path(),
-            'session_id' => session()->getId(),
-            'user_id' => auth()->id(),
-        ]);
+        
 
         return $next($request);
     }

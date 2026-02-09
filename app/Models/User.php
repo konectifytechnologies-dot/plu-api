@@ -34,7 +34,8 @@ class User extends Authenticatable
         'password',
         'additional_data',
         'agent_id',
-        'is_deleted'
+        'is_deleted',
+        'additional_data'
     ];
 
     
@@ -76,6 +77,8 @@ class User extends Authenticatable
         return $this->hasOne(Tenancy::class)->where('status', 'active');
     }
 
+    
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -100,6 +103,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'additional_data'=>'array',
             'is_deleted'=>'boolean',
+            'additional_data'=>'array'
         ];
     }
 }

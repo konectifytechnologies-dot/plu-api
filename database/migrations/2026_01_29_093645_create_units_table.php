@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('rent')->default(0);
             $table->string('property_id');
             $table->foreign('property_id')->references('id')->on('properties')->onDelete('cascade');
+            $table->boolean('id_deleted')->default(0);
             $table->timestamps();
         });
     }

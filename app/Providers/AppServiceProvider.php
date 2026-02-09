@@ -17,9 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton('errors', function ($app) {
-            return new ErrorService;
-        });
+        
     }
 
     /**

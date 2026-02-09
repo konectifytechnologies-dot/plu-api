@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\PropertyResource;
+use App\Queries\AppQuery;
 use Illuminate\Support\Arr;
+use Symfony\Component\HttpFoundation\Response;
 
 class PropertyController extends ApiController
 {
@@ -31,6 +33,7 @@ class PropertyController extends ApiController
             $perPage = 15;
             $perPage = min($perPage, 100); // safety cap
             $page = $request->input('page') ?? 1;
+            $searchTerm = $request->query('query') ?? null;
              $properties = $user->properties()
                             ->with([
                                 'landlord:id,email,number,name',
@@ -40,9 +43,27 @@ class PropertyController extends ApiController
                                     $q->where('status', 'active'); // only active tenancies
                                 },
                             ])->where('is_deleted', false)
-                            ->paginate($perPage, ['*'], 'page', $page);
+                             ->where(function ($query) use($searchTerm){
+                                    if(!is_null($searchTerm)){
+                                        $query->where('name', 'LIKE', "%{$searchTerm}%");
+                                    }
+                            })->paginate($perPage, ['*'], 'page', $page);
           
          return PropertyResource::collection($properties)->response();
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
+    }
+
+    public function show(string $id):Response
+    {
+        try{
+
+        $property = AppQuery::propertyQueries()->where('id', $id)->firstOrFail();
+
+        return response(new PropertyResource($property));
 
         }catch(Exception $e){
             $error = $e->getMessage();
@@ -125,13 +146,7 @@ class PropertyController extends ApiController
         
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Property $property)
-    {
-        //
-    }
+    
 
     /**
      * Show the form for editing the specified resource.

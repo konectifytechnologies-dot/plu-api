@@ -17,20 +17,30 @@ class PropertyResource extends JsonResource
         return [
             'id' => $this->id,
             'name'=>$this->name,
-            'picture'=>$this->picture,
-            'units' => $this->number_of_units,
-            'occupied_units'=>$this->occupiedUnits($this->whenLoaded('units') ?? []),
-            'vacant_units'=>$this->number_of_units - $this->occupiedUnits($this->whenLoaded('units') ?? []),
+            'picture'=>!is_null($this->picture) ? $this->picture : 'https://disqav.s3.eu-west-1.amazonaws.com/disqav/placeholder.png',
+            'units' => $this->number_of_units ?? 0,
+            'occupied_units'=>$this->occupiedUnits($this->whenLoaded('units') ?? []) ?? 0,
+            'vacant_units'=>$this->number_of_units - $this->occupiedUnits($this->whenLoaded('units') ?? []) ?? 0,
             'location'=>$this->location,
             'water_cost'=>$this->water_unit_cost ?? 0,
             'property_type'=>$this->property_type ?? 'residential',
             'has_service_charge'=>$this->has_service_charge ?? false,
             'service_charge'=>$this->service_charge ?? 0,
-            'owned_by'=>!empty($this->whenLoaded('landlord')) ? $this->landlord?->first() : null,
-            'managed_by'=>!empty($this->whenLoaded('agent')) ? $this->agent?->first() : null,
+            'landlord_id'=>$this->landlord_id ?? null,
+            'landlord'=>!empty($this->whenLoaded('landlord')) ? $this->getlandlord($this->landlord?->first()) : null,
+            'agent'=>!empty($this->whenLoaded('agent')) ? $this->getagent($this->agent?->first()): null,
            
         ];
 
+    }
+
+    protected function getlandlord($landlord)
+    {
+        return $landlord->name;
+    }
+
+    protected function getagent($agent){
+        return $agent->name;
     }
 
     protected  function occupiedUnits($units):int

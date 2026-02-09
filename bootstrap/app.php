@@ -36,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
 
         // Sanctum SPA middleware
-        $middleware->append(EnsureFrontendRequestsAreStateful::class);
+        //$middleware->append(EnsureFrontendRequestsAreStateful::class);
         $middleware->append(\App\Http\Middleware\CheckAuthMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {

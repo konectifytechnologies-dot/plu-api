@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 class Repair extends Model
 {
-     protected $keyType = 'string'; 
+        use HasUlids;
+
+    protected $keyType = 'string'; 
     protected $primaryKey = 'id';
     public $incrementing = false; 
     protected $fillable = [

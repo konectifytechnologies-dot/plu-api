@@ -17,10 +17,16 @@ return new class extends Migration
             $table->string('unit_id');
             $table->foreign('property_id')->references('id')->on('properties')->onDelete('cascade');
             $table->foreign('unit_id')->references('id')->on('units')->onDelete('cascade');
-            $table->integer('current_reading');
-            $table->integer('previous_reading')->default(0);
-            $table->date('month');
+            $table->unsignedInteger('year');
+            $table->unsignedInteger('month');
+            $table->decimal('previous_reading', 10,2);
+            $table->decimal('current_reading', 10,2);
+            $table->decimal('units_consumed', 10,2);
+            $table->decimal('amount', 12,2);
+
             $table->timestamps();
+            $table->unique(['unit_id', 'year', 'month']);
+            $table->index(['unit_id', 'year', 'month']);
         });
     }
 

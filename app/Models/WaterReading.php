@@ -3,21 +3,29 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 class WaterReading extends Model
 {
-      protected $keyType = 'string'; 
+    //
+    use HasUlids;
+
+    protected $keyType = 'string'; 
     protected $primaryKey = 'id';
     public $incrementing = false; 
     protected $fillable = [
         'id',
         'property_id',
         'unit_id',
-        'current_reading',
+        'year',
+        'month',
         'previous_reading',
-        'month'
+        'current_reading',
+        'units_consumed',
+        'amount'
     ];
 
+    
     public function property()
     {
         return $this->belongsTo(Property::class);
@@ -27,4 +35,9 @@ class WaterReading extends Model
     {
         return $this->belongsTo(Unit::class);
     }
+    protected function casts(): array
+    {
+        return ['previous_reading'=>'integer', 'current_reading'=>'integer', 'units_consumed'=>'integer', 'amount'=>'integer'];
+    }
+    
 }

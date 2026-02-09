@@ -18,10 +18,16 @@ class UnitResource extends JsonResource
             'id'=>$this->id,
             'name'=>$this->name,
             'bedrooms'=>$this->bedrooms,
-            'house'=>$this->property?->name,
+            'property_id'=>$this->property_id,
+            'property'=>$this->property?->name,
             'service_charge'=>$this->property?->service_charge,
             'rent'=>$this->property?->has_service_charge ? ($this->rent * $this->property?->service_charge) : $this->rent,
-            'tenant'=>!is_null($this->tenancy) ? $this->tenancy?->user : 'Un-occupied',
+            'tenant'=>!is_null($this->tenancy) ? $this->getTenant($this->tenancy?->user) : 'Un-occupied',
         ];
+    }
+
+    protected function getTenant($tenant)
+    {
+        return $tenant->name;
     }
 }

@@ -25,9 +25,37 @@ class UnitController extends ApiController
     {
         $this->property = $property;
     }
-    public function index()
+    public function tenants(Request $request)
     {
-        //
+        try{
+            $user = $request->user();
+            $isAgent =  $user->role == 'agent';
+            $page = $request->input('page') ?? 1;
+            $searchTerm = $request->input('query') ?? null;
+            $perPage = 15;
+            $properties = $isAgent ? $user->agentProperties : $user->landlordProperties;
+            $ids = $properties->pluck('id');
+            $items = Tenancy::with(['user'=> function ($q) {
+                            $q->where('is_deleted', false); // only active tenancies
+                        }, 
+                            'property:id,name',
+                            'unit:id,name'
+                        ])->whereIn('property_id', $ids)
+                        ->where(['status'=>'active'])
+                        ->where(function ($query) use($searchTerm){
+                            if(!is_null($searchTerm)){
+                                $query->where('name', 'LIKE', "%{$searchTerm}%");
+                            }
+                        })->paginate($perPage, ['*'], 'page', $page);
+            return TenantResource::collection($items)->response();
+
+
+           
+
+         }catch(Exception $e){
+            $error = $e->getMessage(); 
+            return $this->error($error);
+        }
     }
 
     public function propertyTenants(string $id)
@@ -41,7 +69,7 @@ class UnitController extends ApiController
                                     'unit:id,name'
                                 ])->where(['property_id'=>$id, 'status'=>'active'])
                                 ->get();
-            $tenants = TenantResource::collection($items);
+            $tenants = TenantResource::collection($items); 
             return response($tenants, 200);
         }catch(Exception $e){
             $error = $e->getMessage();
@@ -103,22 +131,23 @@ class UnitController extends ApiController
                 'unit_id'=>['required', 'string'],
                 'property_id'=>['required', 'string'],
             ]); 
-            $tenancyExists = Tenancy::where(['unit_id'=>$data['unit_id'], 'status'=>'active'])->exists();
+            $tenancyExists = Tenancy::where(['unit_id'=>$request->unit_id, 'status'=>'active'])->exists();
             if($tenancyExists){
                 return $this->error('Unit is occupied');
             }
             $response = null;
             $errors = null;
             DB::transaction(function () use ($data, &$errors, &$response) {
-                $password = $request->password ?? Str::password(8);
+                $password = Str::password(8);
 
-                $user = User::create([
+                $user =User::create([
                     'name' => $data['name'],
-                    'email' => $data['email'],
+                    'email' => $data['email'] ?? null,
                     'number'=>$data['number'],
                     'role'=>'tenant',
                     'password' => Hash::make($password),
                 ]);
+                $response = $user;
                 $tenancy = $this->property->createTenancy($user, $data['property_id'], $data['unit_id']);
                 if($tenancy['errors']){
                     $errors = $tenancy['errors'];
@@ -128,7 +157,7 @@ class UnitController extends ApiController
             if(!is_null($errors)){
                 return $this->error($errors['error']);
             }
-            return $this->success($response, 'Tenant Created Successfully');
+            return $this->success(['data'=>$data['unit_id']], 'Tenant Created Successfully');
 
         }catch(Exception $e){
             $error = $e->getMessage();
@@ -174,30 +203,18 @@ class UnitController extends ApiController
     {
         try{
             $data = $request->validate([
-                'tenancy_id'=>['required', 'string:exists,tenancies.id'],
+                //'tenancy_id'=>['required', 'string:exists,tenancies.id'],
                 'name'=>['required', 'string'],
                 'email'=>['nullable', 'string'],
                 'number'=>['required', 'string'],
-                'unit_id'=>['required', 'string'],
-                'property_id'=>['required', 'string'],
             ]); 
-            $tenancyExists = Tenancy::where(['unit_id'=>$data['unit_id'], 'status'=>'active'])->exists();
-            $user = User::with('tenancy')->where('id', $id)->firstOrFail();
-            $tenancy = $user->tenancy->first();
-            $isSameUnitId = $data['unit_id'] == $tenancy->id;
-            if($isSameUnitId && $tenancyExists){
-                return $this->error('This Unit is already occupied');
-            }
-            DB::transaction(function () use ($data,$id, &$errors, $user, &$response) {
+            $user = User::find($id);
                 $user->update([
                     'name'=>$data['name'],
                     'email'=>$data['email'],
                     'number'=>$data['number']
                 ]);
-                $tenancy = $this->property->updateTenancy($data['tenancy_id'], $data['property_id'], $data['unit_id']);
-                $response = $tenancy;
-            });
-            return $this->success(['id'=>$isSameUnitId], 'Tenant Updated');
+            return $this->success($user->fresh(), 'Tenant Updated');
 
 
         }catch(Exception $e){
