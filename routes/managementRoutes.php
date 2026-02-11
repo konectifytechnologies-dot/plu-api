@@ -5,8 +5,10 @@ use Illuminate\Http\Request;
 use \App\Http\Controllers\Management\PropertyController;
 use App\Http\Controllers\Management\UnitController;
 use App\Http\Controllers\Management\UtilityController;
+use App\Http\Controllers\Management\PaymentController;
 use Illuminate\Support\Facades\Route;
  Route::post('/repair', [UtilityController::class, 'addRepair']);
+Route::get('/stk-push', [PaymentController::class, 'stkPush']);
 Route::middleware(['auth:sanctum', 'throttle:authenticated'])->group(function () {
     Route::get('/properties', [PropertyController::class, 'index']);
     Route::get('/property/{id}', [PropertyController::class, 'show']);
