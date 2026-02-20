@@ -20,19 +20,25 @@ class Property extends Model
         'location',
         'water_unit_cost',
         'property_type',
-        'has_service_charge',
-        'service_charge',
+        'deposit_required',
+        'rent_due_date',
+        'invoice_counter',
         'is_deleted'
     ];
 
     protected function casts(): mixed
     {
-        return ['is_deleted' => 'boolean', 'has_service_charge'=>'boolean'];
+        return ['is_deleted' => 'boolean', 'has_service_charge'=>'boolean', 'deposit_required'=>'boolean'];
     }
 
     public function units()
     {
         return $this->hasMany(Unit::class);
+    }
+
+    public function costs()
+    {
+        return $this->hasMany(AdditionalCost::class);
     }
 
     public function tenancies()
@@ -67,6 +73,11 @@ class Property extends Model
     {
         return $this->belongsToMany(User::class, 'property_users')
             ->wherePivot('role', 'agent');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /*public function getLandlordAttribute()

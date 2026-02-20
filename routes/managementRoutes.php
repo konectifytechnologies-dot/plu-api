@@ -1,14 +1,13 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use Illuminate\Http\Request;
 use \App\Http\Controllers\Management\PropertyController;
 use App\Http\Controllers\Management\UnitController;
 use App\Http\Controllers\Management\UtilityController;
 use App\Http\Controllers\Management\PaymentController;
 use Illuminate\Support\Facades\Route;
- Route::post('/repair', [UtilityController::class, 'addRepair']);
-Route::get('/stk-push', [PaymentController::class, 'stkPush']);
+
+Route::post('/sms', [PaymentController::class, 'smsid']);
+Route::get('/all-tenants', [UnitController::class, 'alltenants']);
 Route::middleware(['auth:sanctum', 'throttle:authenticated'])->group(function () {
     Route::get('/properties', [PropertyController::class, 'index']);
     Route::get('/property/{id}', [PropertyController::class, 'show']);
@@ -30,7 +29,17 @@ Route::middleware(['auth:sanctum', 'throttle:authenticated'])->group(function ()
     Route::post('/utility', [UtilityController::class, 'create']);
     Route::get('/property/readings/{id}', [UtilityController::class, 'index']);
 
-   
+    Route::post('/property/cost/{id}', [PaymentController::class, 'addCost']);
+    Route::patch('/property/cost/{id}', [PaymentController::class, 'editCost']);
+    Route::get('/property/costs/{id}', [PaymentController::class, 'propertyCosts']);
+
+    Route::post('/repair', [UtilityController::class, 'addRepair']);
+    Route::get('/repairs', [UtilityController::class, 'repairs']);
+    Route::patch('/repair/status/{id}', [UtilityController::class, 'updateStatus']);
+
+    Route::get('/payments', [PaymentController::class, 'payments']);
+    Route::post('/payment', [PaymentController::class, 'payment']);
+    Route::patch('/payment/{id}', [PaymentController::class, 'editPayment']);
     
     
     

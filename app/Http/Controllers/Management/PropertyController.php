@@ -84,8 +84,8 @@ class PropertyController extends ApiController
             'location'=>['nullable', 'string'],
             'water_cost'=>['nullable', 'integer'],
             'property_type'=>['nullable', 'string'],
-            'has_service_charge'=>['nullable', 'boolean'],
-            'service_charge'=>['nullable', 'integer'],
+            'deposit_required'=>['nullable', 'boolean'],
+            'rent_due_date'=>['nullable', 'integer'],
             'landlord_id' => ['nullable', 'exists:users,id'],
         ]);
        
@@ -101,8 +101,8 @@ class PropertyController extends ApiController
                 'location'=>$data['location'] ?? null,
                 'water_unit_cost'=>$data['water_cost'] ?? 0,
                 'property_type'=>$data['property_type'] ?? 'residential',
-                'has_service_charge'=>$data['has_service_charge'] ?? false,
-                'service_charge'=>$data['service_charge'] ?? 0    
+                'deposit_required'=>$data['deposit_required'] ?? true,
+                'rent_due_date'=>intVal($data['rent_due_date'] ) ?? 5
             ]);
 
             if(!$isAgent && !empty($data['landlord_id'])){
@@ -141,9 +141,17 @@ class PropertyController extends ApiController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function single(Request $request, string $id)
     {
-        
+        try{
+            $property = AppQuery::propertyQueries()->where('id', $id)->firstOrFail();
+            $item = new PropertyResource($property);
+            return response($item, 200);
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
     }
 
     
@@ -161,8 +169,8 @@ class PropertyController extends ApiController
                 'location'=>['nullable', 'string'],
                 'water_cost'=>['nullable', 'integer'],
                 'property_type'=>['nullable', 'string'],
-                'has_service_charge'=>['nullable', 'boolean'],
-                'service_charge'=>['nullable', 'integer']
+                'deposit_required'=>['nullable', 'boolean'],
+                'rent_due_date'=>['nullable', 'integer']
             ]);
             $property = Property::find($id);
             if(!$property){
@@ -174,8 +182,8 @@ class PropertyController extends ApiController
                 'location'=>$data['location'],
                 'water_unit_cost'=>$data['water_cost'],
                 'property_type'=>$data['property_type'],
-                'has_service_charge'=>$data['has_service_charge'],
-                'service_charge'=>$data['service_charge'],
+                'deposit_required'=>$data['deposit_required'] ?? true,
+                'rent_due_date'=>$data['rent_due_date']
             ]);
             return $this->success($property->fresh(), 'Property Updated succeffully');
         }catch(Exception $e){

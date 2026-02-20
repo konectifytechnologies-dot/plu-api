@@ -24,9 +24,9 @@ class PropertyResource extends JsonResource
             'location'=>$this->location,
             'water_cost'=>$this->water_unit_cost ?? 0,
             'property_type'=>$this->property_type ?? 'residential',
-            'has_service_charge'=>$this->has_service_charge ?? false,
-            'service_charge'=>$this->service_charge ?? 0,
-            'landlord_id'=>$this->landlord_id ?? null,
+            'deposit_required'=>$this->deposit_required ?? true,
+            'rent_due_date'=>$this->rent_due_date ?? 5,
+            'landlord_id'=>!empty($this->whenLoaded('landlord')) ? $this->landlord?->first()->id : null,
             'landlord'=>!empty($this->whenLoaded('landlord')) ? $this->getlandlord($this->landlord?->first()) : null,
             'agent'=>!empty($this->whenLoaded('agent')) ? $this->getagent($this->agent?->first()): null,
            

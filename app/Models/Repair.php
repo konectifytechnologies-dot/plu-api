@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Repair extends Model
 {
@@ -17,8 +19,16 @@ class Repair extends Model
         'description',
         'property_id',
         'unit_id',
-        'repair_cost'
+        'repair_cost',
+        'status'
     ];
+
+     public function createdAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => Carbon::parse($value)->format('d F Y')
+        );
+    }
 
     public function repairitems()
     {
