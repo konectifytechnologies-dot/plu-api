@@ -32,6 +32,11 @@ class Tenancy extends Model
         return $this->belongsTo(Property::class);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function unit()
     {
         return $this->belongsTo(Unit::class);

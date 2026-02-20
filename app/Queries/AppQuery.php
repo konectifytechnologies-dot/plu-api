@@ -1,5 +1,7 @@
 <?php
 namespace App\Queries;
+
+use App\Models\Payment;
 use App\Models\Property;
 
 class AppQuery
@@ -14,6 +16,15 @@ class AppQuery
                                     $q->where('status', 'active'); // only active tenancies
                                 },
                             ]);
+    }
+
+    public static function paymentqueries()
+    {
+        return Payment::query()->with([
+            'user:id,name,number',
+            'tenancy',
+            'property'
+        ]);
     }
 
 } 

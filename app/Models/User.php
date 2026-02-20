@@ -77,6 +77,11 @@ class User extends Authenticatable
         return $this->hasOne(Tenancy::class)->where('status', 'active');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     
 
     /**

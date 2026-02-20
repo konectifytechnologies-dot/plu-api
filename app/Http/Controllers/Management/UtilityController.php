@@ -15,11 +15,39 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ReadingResource;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Resources\RepairResource;
 
 class UtilityController extends ApiController 
 {
   
-     
+     public function repairs(Request $request)
+     {
+        try{
+            $user = $request->user();
+            $isAgent =  $user->role == 'agent';
+            $page = $request->input('page') ?? 1;
+            $perPage = 15;
+            $status = $request->input('status') ?? null;
+            $properties = $isAgent ? $user->agentProperties : $user->landlordProperties;
+            $ids = $properties->pluck('id');
+
+            $repairs = Repair::with([
+                            'repairitems',
+                            'property:id,name',
+                            'unit:id,name'
+                        ])->where(function ($query)  use ($status){
+                            if(!is_null($status)){
+                                $query->where('status', $status);
+                            }
+                        })->whereIn('property_id', $ids)->paginate($perPage, ['*'], 'page', $page);
+                        
+            return RepairResource::collection($repairs)->response();
+        }catch (Exception $e) {
+            $response = ['error' => $e->getMessage(), 'code' => 3];
+                Log::info($e->getMessage());
+                return response($response, 500);
+        }
+     }
 
     /**
      * Show the form for creating a new resource.
@@ -174,9 +202,23 @@ class UtilityController extends ApiController
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(WaterReading $waterReading)
+    public function updateStatus(Request $request, string $id)
     {
-        //
+        try{
+            $request->validate(['status'=> ['required', 'string']]);
+            $repair = Repair::find($id);
+            if(!$repair){
+                return $this->notFound('Repair not found');
+            }
+            $repair->update([
+                'status'=>$request->status
+            ]);
+            return $this->success($repair->fresh(), 'Repair updated successfully');
+
+        }catch (Exception $e) {
+            $response = ['error' => $e->getMessage(), 'code' => 3];
+            return response($response, 500);
+        }
     }
 
     /**

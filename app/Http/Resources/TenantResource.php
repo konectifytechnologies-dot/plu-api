@@ -24,7 +24,10 @@ class TenantResource extends JsonResource
             'unit_id'=>$this->unit?->id,
             'user_id'=>$this->user_id,
             'house'=>$this->property?->name,
+            'rent_due_date'=>$this->property?->rent_due_date ?? 5,
+            'costs'=>$this->property?->costs ?? [],
             'house_number'=>$this->unit?->name,
+            'rent'=>$this->unit?->rent ?? 0,
             'start_date'=>Carbon::parse($this->start_date)->format('d F Y'),
         ];
     }

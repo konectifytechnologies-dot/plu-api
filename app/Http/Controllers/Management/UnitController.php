@@ -2,28 +2,32 @@
 
 namespace App\Http\Controllers\Management;
 
-use Exception;
-use App\Models\Unit;
-use App\Models\User;
-use App\Models\Tenancy;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Services\PropertyService;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Controllers\Controller;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UnitResource;
+use App\Models\Property;
+use App\Models\Tenancy;
+use App\Models\Unit;
+use App\Models\User;
+use App\Services\InvoiceService;
+use App\Services\PropertyService;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UnitController extends ApiController
 {
     protected PropertyService $property;
+    protected InvoiceService $invoice;
 
 
-    public function __construct(PropertyService $property)
+    public function __construct(PropertyService $property, InvoiceService $invoice)
     {
         $this->property = $property;
+        $this->invoice = $invoice;
     }
     public function tenants(Request $request)
     {
@@ -39,7 +43,7 @@ class UnitController extends ApiController
                             $q->where('is_deleted', false); // only active tenancies
                         }, 
                             'property:id,name',
-                            'unit:id,name'
+                            'unit:id,name,rent'
                         ])->whereIn('property_id', $ids)
                         ->where(['status'=>'active'])
                         ->where(function ($query) use($searchTerm){
@@ -58,6 +62,18 @@ class UnitController extends ApiController
         }
     }
 
+    public function alltenants()
+    {
+        try{
+            $tenants = $this->invoice->generateTenantInvoices();
+            return $tenants;
+
+         }catch(Exception $e){
+            $error = $e->getMessage(); 
+            return $this->error($error);
+        }
+    }
+
     public function propertyTenants(string $id)
     {
         try{
@@ -66,7 +82,7 @@ class UnitController extends ApiController
                                         $q->where('is_deleted', false); // only active tenancies
                                     }, 
                                     'property:id,name',
-                                    'unit:id,name'
+                                    'unit:id,name,rent'
                                 ])->where(['property_id'=>$id, 'status'=>'active'])
                                 ->get();
             $tenants = TenantResource::collection($items); 
@@ -139,7 +155,8 @@ class UnitController extends ApiController
             $errors = null;
             DB::transaction(function () use ($data, &$errors, &$response) {
                 $password = Str::password(8);
-
+                $property = Property::find($data['property_id']);
+                $unit = Unit::find($data['unit_id']);
                 $user =User::create([
                     'name' => $data['name'],
                     'email' => $data['email'] ?? null,
@@ -149,15 +166,16 @@ class UnitController extends ApiController
                 ]);
                 $response = $user;
                 $tenancy = $this->property->createTenancy($user, $data['property_id'], $data['unit_id']);
+                $invoice =  $this->invoice->createInvoice($property, $unit, true);
                 if($tenancy['errors']){
                     $errors = $tenancy['errors'];
                 }
-                $response = $tenancy;
+                $response = ['tenancy'=>$tenancy, 'invoice'=>$invoice];
             });
             if(!is_null($errors)){
                 return $this->error($errors['error']);
             }
-            return $this->success(['data'=>$data['unit_id']], 'Tenant Created Successfully');
+            return $this->success($response, 'Tenant Created Successfully');
 
         }catch(Exception $e){
             $error = $e->getMessage();
@@ -168,10 +186,7 @@ class UnitController extends ApiController
     /**
      * Display the specified resource.
      */
-    public function show(Unit $unit)
-    {
-        //
-    }
+   
 
     /**
      * Show the form for editing the specified resource.
