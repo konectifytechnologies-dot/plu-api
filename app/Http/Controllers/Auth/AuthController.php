@@ -15,9 +15,15 @@ use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use sirajcse\UniqueIdGenerator\UniqueIdGenerator;
 
 class AuthController extends ApiController
 {
+    public function testidgenerator()
+    {
+        $id = UniqueIdGenerator::generate(['table' => 'users', 'length' => 6]);
+        return response(['id'=>$id]);
+    }
     public function landlords(Request $request)
     {
         try{

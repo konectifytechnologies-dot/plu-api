@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Management;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PaymentResource;
 use App\Models\AdditionalCost;
 use App\Models\Payment;
 use App\Models\Property;
@@ -66,7 +67,7 @@ class PaymentController extends ApiController
                                                                 });
                                                             }
                                                         })->paginate($perPage, ['*'], 'page', $page);              
-                return response($payments);
+                return PaymentResource::collection($payments)->response();
             }
             $properties = $isAgent ? $user->agentProperties : $user->landlordProperties;
             $ids = $properties->pluck('id');
@@ -83,7 +84,7 @@ class PaymentController extends ApiController
                                         });
                                     }
                                 })->paginate($perPage, ['*'], 'page', $page);
-            return response($payments);
+            return PaymentResource::collection($payments)->response();
 
 
         }catch(Exception $e){

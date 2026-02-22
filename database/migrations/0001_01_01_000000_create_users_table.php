@@ -14,12 +14,13 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email')->nullable()->unique();
             $table->string('number')->unique();
             $table->enum('role', ['agent', 'landlord', 'tenant']);
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('agent_id', 26)->nullable();
+            $table->string('agent_id')->nullable();
             $table->foreign('agent_id')->references('id')->on('users')->onDelete('cascade');
+            $table->json('additional_data')->nullable();
             $table->boolean('is_deleted')->nullable()->default(0);
             $table->string('password');
             $table->rememberToken();

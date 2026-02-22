@@ -97,7 +97,7 @@ class UnitController extends ApiController
     {
         try{
             $items = Unit::with([
-                            'property:id,name,has_service_charge,service_charge',
+                            'property:id,name',
                             'tenancy.user:id,name,number'
                             ])->where('property_id', $id)->get();
             $units = UnitResource::collection($items);
@@ -171,7 +171,7 @@ class UnitController extends ApiController
                     $errors = $tenancy['errors'];
                 }
                 $response = ['tenancy'=>$tenancy, 'invoice'=>$invoice];
-            });
+            }); 
             if(!is_null($errors)){
                 return $this->error($errors['error']);
             }

@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('property_users', function (Blueprint $table) {
-            $table->id();
-            $table->string('property_id');
+        Schema::create('mpesamsgs', function (Blueprint $table) {
+            $table->ulid('id')->primary();
+            $table->longText('message')->nullable();
             $table->string('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('property_id')->references('id')->on('properties')->onDelete('cascade');
-            $table->enum('role', ['landlord', 'agent']);
+            $table->string('CheckoutRequestID')->nullable();
             $table->timestamps();
-            $table->unique(['property_id', 'user_id', 'role']);
         });
     }
 
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('property_users');
+        Schema::dropIfExists('mpesamsgs');
     }
 };

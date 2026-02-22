@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->ulid('id', 26)->primary();
             $table->string('property_id', 26);
-            $table->string('user_id', 26);
+            $table->string('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('tenancy_id', 26);
             $table->string('cost_id', 26)->nullable();
             $table->string('payment_type')->default('RENT');
@@ -27,7 +28,6 @@ return new class extends Migration
             $table->integer('amount_paid');
             $table->integer('balance')->default(0);
             $table->foreign('property_id')->references('id')->on('properties')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('tenancy_id')->references('id')->on('tenancies')->onDelete('cascade');
             $table->foreign('cost_id')->references('id')->on('additional_costs')->onDelete('cascade');
             $table->timestamps();

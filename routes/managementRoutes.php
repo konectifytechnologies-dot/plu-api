@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/sms', [PaymentController::class, 'smsid']);
 Route::get('/all-tenants', [UnitController::class, 'alltenants']);
+
 Route::middleware(['auth:sanctum', 'throttle:authenticated'])->group(function () {
     Route::get('/properties', [PropertyController::class, 'index']);
     Route::get('/property/{id}', [PropertyController::class, 'show']);
