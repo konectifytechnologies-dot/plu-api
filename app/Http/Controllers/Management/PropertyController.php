@@ -1,18 +1,21 @@
 <?php
 
 namespace App\Http\Controllers\Management;
-use Exception;
 use App\Facades\Errors;
-use App\Models\Property;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use App\Services\PropertyService;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Controllers\Controller;
 use App\Http\Resources\PropertyResource;
+use App\Models\Property;
 use App\Queries\AppQuery;
+use App\Services\PropertyService;
+use App\Traits\ApiResponse;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class PropertyController extends ApiController
@@ -77,38 +80,58 @@ class PropertyController extends ApiController
      public function create(Request $request)
     {
         try{
-            $data = $request->validate([
+            $request->validate([
             'name'        => ['required', 'string', 'max:255'],
-            'picture'     => ['nullable', 'string'],
+            'picture'     => ['nullable', 'image'],
             'units'        => ['required', 'integer'],
             'location'=>['nullable', 'string'],
             'water_cost'=>['nullable', 'integer'],
             'property_type'=>['nullable', 'string'],
-            'deposit_required'=>['nullable', 'boolean'],
+            'deposit_required'=>['nullable', 'string'],
             'rent_due_date'=>['nullable', 'integer'],
             'landlord_id' => ['nullable', 'exists:users,id'],
         ]);
+
        
         $user = $request->user();
         $response = [];
 
-        DB::transaction(function () use ($data, $user, &$response) {
+        DB::transaction(function () use ($user, $request, &$response) {
             $isAgent = $user->role == 'agent';
-            $property = Property::create([
-                'name'    => $data['name'],
-                'picture'=>$data['picture'] ?? null,
-                'number_of_units'=>$data['units'] ?? 0,
-                'location'=>$data['location'] ?? null,
-                'water_unit_cost'=>$data['water_cost'] ?? 0,
-                'property_type'=>$data['property_type'] ?? 'residential',
-                'deposit_required'=>$data['deposit_required'] ?? true,
-                'rent_due_date'=>intVal($data['rent_due_date'] ) ?? 5
-            ]);
+            $imageUrl = null;
+            
+            if ($request->hasFile('picture')) {
+                try{
+                    $file = $request->file('picture');
+                    $extension = $file->getClientOriginalExtension();
+                    $name = $file->getClientOriginalName();
+                    $filename = Str::random(8) . '.' . $extension;
+                    $folderPath = 'plu/';
 
-            if(!$isAgent && !empty($data['landlord_id'])){
+                    $path =  Storage::disk('s3')->putFileAs($folderPath, $file, $filename);
+                    $imageUrl = 'plu/'.$filename;
+                }catch(Exception $e){
+                    $error = $e->getMessage();
+                    return $this->error($error);
+                }
+                
+            }
+            
+            $property = Property::create([
+                'name'    => $request->name,
+                'picture'=>$imageUrl ?? null,
+                'number_of_units'=>intVal($request->units) ?? 0,
+                'location'=>$request->location ?? null,
+                'water_unit_cost'=>intval($request->water_cost) ?? null,
+                'property_type'=>$request->property_type ?? 'residential',
+                'deposit_required'=>filter_var($request->deposit_required, FILTER_VALIDATE_BOOL) ?? true,
+                'rent_due_date'=>intVal($request->rent_due_date ) ?? 5
+            ]);
+           
+            if(!$isAgent && !empty($request->landlord_id)){
                 $this->property->attachUserToProperty(
                     $property->id,
-                    $data['landlord_id'],
+                    $request->landlord_id,
                     'landlord'
                 );
             }
@@ -119,10 +142,10 @@ class PropertyController extends ApiController
                     $user->id,
                     'agent'
                 );
-                if(!empty($data['landlord_id'])){
+                if(!empty($request->landlord_id)){
                     $this->property->attachUserToProperty(
                         $property->id,
-                        $data['landlord_id'],
+                        $request->landlord_id,
                         'landlord'
                     );
                 }
@@ -159,31 +182,48 @@ class PropertyController extends ApiController
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Request $request, string $id)
+    public function editProperty(Request $request, string $id)
     {
         try{
-            $data = $request->validate([
+            $request->validate([
                 'name'        => ['required', 'string', 'max:255'],
-                'picture'     => ['nullable', 'string'],
+                'picture'     => ['nullable', 'image', 'max:2048'],
                 'units'        => ['required', 'integer'],
                 'location'=>['nullable', 'string'],
                 'water_cost'=>['nullable', 'integer'],
                 'property_type'=>['nullable', 'string'],
-                'deposit_required'=>['nullable', 'boolean'],
+                'deposit_required'=>['nullable', 'string'],
                 'rent_due_date'=>['nullable', 'integer']
             ]);
             $property = Property::find($id);
             if(!$property){
                 return $this->notFound('Property not found');
             }
+            $imageUrl = $property->picture;
+            if ($request->hasFile('picture')) {
+                try{
+                    $file = $request->file('picture');
+                    $extension = $file->getClientOriginalExtension();
+                    $filename = Str::random(8) . '.' . $extension;
+                    $folderPath = 'plu/';
+
+                    $path =  Storage::disk('s3')->putFileAs($folderPath, $file, $filename);
+                    $imageUrl = 'plu/'.$filename;
+                }catch(Exception $e){
+                    $error = $e->getMessage();
+                    return $this->error($error);
+                }
+                
+            }
             $property->update([
-                'name'=>$data['name'],
-                'picture'=>$data['picture'],
-                'location'=>$data['location'],
-                'water_unit_cost'=>$data['water_cost'],
-                'property_type'=>$data['property_type'],
-                'deposit_required'=>$data['deposit_required'] ?? true,
-                'rent_due_date'=>$data['rent_due_date']
+                'name'    => $request->name,
+                'picture'=>$imageUrl ?? null,
+                'number_of_units'=>intVal($request->units) ?? 0,
+                'location'=>$request->location ?? null,
+                'water_unit_cost'=>intval($request->water_cost) ?? null,
+                'property_type'=>$request->property_type ?? 'residential',
+                'deposit_required'=>filter_var($request->deposit_required, FILTER_VALIDATE_BOOL) ?? true,
+                'rent_due_date'=>intVal($request->rent_due_date ) ?? 5
             ]);
             return $this->success($property->fresh(), 'Property Updated succeffully');
         }catch(Exception $e){

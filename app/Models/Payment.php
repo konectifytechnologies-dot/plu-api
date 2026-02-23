@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Payment extends Model
 {
@@ -47,6 +49,13 @@ class Payment extends Model
     public function cost()
     {
         return $this->belongsTo(AdditionalCost::class, 'cost_id', 'id');
+    }
+
+    public function createdAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => Carbon::parse($value)->format('d F Y')
+        );
     }
 
     protected static function booted()

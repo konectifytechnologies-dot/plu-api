@@ -17,7 +17,7 @@ class PropertyResource extends JsonResource
         return [
             'id' => $this->id,
             'name'=>$this->name,
-            'picture'=>!is_null($this->picture) ? $this->picture : 'https://disqav.s3.eu-west-1.amazonaws.com/disqav/placeholder.png',
+            'picture'=>!is_null($this->picture) ? 'https://disqav.s3.eu-west-1.amazonaws.com/'.$this->picture : 'https://disqav.s3.eu-west-1.amazonaws.com/disqav/placeholder.png',
             'units' => $this->number_of_units ?? 0,
             'occupied_units'=>$this->occupiedUnits($this->whenLoaded('units') ?? []) ?? 0,
             'vacant_units'=>$this->number_of_units - $this->occupiedUnits($this->whenLoaded('units') ?? []) ?? 0,

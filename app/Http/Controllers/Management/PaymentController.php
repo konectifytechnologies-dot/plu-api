@@ -143,10 +143,12 @@ class PaymentController extends ApiController
             $request->validate([
                 'user_id'=> ['required', 'string'],
                 'tenancy_id'=>['required', 'string'],
-                'amount'=>['required', 'integer'],
+                'property_id'=>['required', 'string'],
+                'amount_paid'=>['required', 'integer'],
                 'payment_method'=>['nullable', 'string'],
                 'reference_code'=>['nullable', 'string'],
-                'paid_for'=>['nullable', 'string']
+                'description'=>['nullable', 'string'],
+                'date'=> ['nullable', 'string']
             ]);
             $payment  = Payment::find($id);
             if(!$payment){
@@ -155,14 +157,14 @@ class PaymentController extends ApiController
             $payment->update([
                 'user_id'=>$request->user_id,
                 'tenancy_id'=>$request->tenancy_id,
-                'amount'=>$request->amount,
+                'property_id'=>$request->property_id,
+                'amount_paid'=>$request->amount_paid,
                 'payment_method'=>$request->payment_method,
                 'reference_code'=>$request->reference_code,
-                'paid_for'=>$request->paid_for
+                'description'=>$request->description,
+                'date'=>$request->date
             ]);
             return $this->success($payment->refresh(), 'payment updated');
-
-
         }catch(Exception $e){
             $error = $e->getMessage();
             return $this->error($error);
@@ -187,6 +189,22 @@ class PaymentController extends ApiController
             ]);
             return $this->success($add, 'Added cost successfully');
 
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
+    }
+
+    public function deletePayment(string $id)
+    {
+        try{
+            $payment = Payment::find($id);
+            if(!$payment){
+                return $this->notFound('Payment not found');
+            }
+            $delete = $payment->delete();
+            return $this->success(['deleted'=>$delete], 'Payment Deleted');
 
         }catch(Exception $e){
             $error = $e->getMessage();

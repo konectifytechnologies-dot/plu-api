@@ -23,6 +23,7 @@ class PaymentResource extends JsonResource
             'cost_id'=>$this->cost_id,
             'amount_paid'=>$this->amount_paid,
             'amount_due'=>$this->amount_due,
+            'balance'=> $this->balance ?? 0,
             'property'=>$this->property?->name,
             'property_id'=>$this->property_id,
             'tenancy_id'=>$this->tenancy_id,
@@ -30,7 +31,7 @@ class PaymentResource extends JsonResource
             'year'=>$this->year,
             'user'=>$this->user?->name,
             'reference_code'=>$this->reference_code,
-
+            'created_at'=>$this->created_at
         ];
     }
 }
