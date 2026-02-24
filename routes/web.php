@@ -13,7 +13,7 @@ Route::post('/debug-csrf', function () {
         'xsrf_cookie' => request()->cookie('XSRF-TOKEN'),
         'xsrf_header' => request()->header('X-XSRF-TOKEN'),
         'session_id' => session()->getId(),
-        'session' => session()->all(),
+        'session' => session()->all(), 
     ]);
 });
 
