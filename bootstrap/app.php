@@ -20,15 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
     )
      ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (TokenMismatchException $e, $request) {
-            Log::error('CSRF TOKEN MISMATCH DETECTED', [
-                'url' => $request->fullUrl(),
-                'method' => $request->method(),
-                'cookies' => $request->cookies->all(),
-                'headers' => $request->headers->all(),
-                'session_id' => session()->getId(),
-            ]);
-        });
+       
         $exceptions->renderable(function (
             ValidationException $e,
             $request
@@ -42,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withMiddleware(function (Middleware $middleware) {
         // CORS must run FIRST
+        $middleware->append(\App\Http\Middleware\DebugRequest::class);
         $middleware->append(HandleCors::class);
         $middleware->statefulApi();
 
