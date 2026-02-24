@@ -2,11 +2,13 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Foundation\Configuration\Middleware;
-use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use Symfony\Component\HttpFoundation\Response;
 
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -18,7 +20,15 @@ return Application::configure(basePath: dirname(__DIR__))
         
     )
      ->withExceptions(function (Exceptions $exceptions) {
-
+        $exceptions->render(function (TokenMismatchException $e, $request) {
+            Log::error('CSRF TOKEN MISMATCH DETECTED', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'cookies' => $request->cookies->all(),
+                'headers' => $request->headers->all(),
+                'session_id' => session()->getId(),
+            ]);
+        });
         $exceptions->renderable(function (
             ValidationException $e,
             $request
