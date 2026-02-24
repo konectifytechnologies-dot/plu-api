@@ -30,12 +30,12 @@ class DebugRequest
             'referer' => $request->header('Referer'),
 
             // Session
-            'session_id' => $request->session()->getId(),
+            /*'session_id' => $request->session()->getId(),
             'session_all' => $request->session()->all(),
 
             // Auth
             'auth_check' => Auth::check(),
-            'auth_user' => Auth::user(),
+            'auth_user' => Auth::user(),*/
 
             // HTTPS detection
             'is_secure' => $request->isSecure(),
