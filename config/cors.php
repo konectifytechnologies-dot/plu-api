@@ -15,19 +15,19 @@ return [
     |
     */
 
-    /*'paths' => ['login',
+    'paths' => ['login',
         'logout',
         'sanctum/csrf-cookie',
         '/debug-csrf',
         'debug-auth',
-        'api/*',],*/
-    'paths'=>['*'],
+        'api/*',],
 
     'allowed_methods' => ['*'],
     'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000 ', 'https://pludevelopers.co.ke', 'https://api.pludevelopers.co.ke')],
 
 
     'allowed_origins_patterns' => [],
+    'exposed_headers' => ['XSRF-TOKEN'],
 
     'allowed_headers' => ['*'],
 
