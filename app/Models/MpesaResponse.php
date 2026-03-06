@@ -22,7 +22,8 @@ class MpesaResponse extends Model
         'amount',
         'MpesaReceiptNumber',
         'TransactionDate',
-        'PhoneNumber'
+        'PhoneNumber',
+        'status'
     ];
 
 }

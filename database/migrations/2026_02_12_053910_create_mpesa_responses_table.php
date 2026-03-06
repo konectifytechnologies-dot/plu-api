@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('MpesaReceiptNumber')->nullable()->unique();
             $table->string('TransactionDate')->nullable();
             $table->string('PhoneNumber')->nullable();
+            $table->enum('status', ['paid', 'pending'])->default('pending');
             $table->timestamps();
         });
     }

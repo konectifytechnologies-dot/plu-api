@@ -34,7 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withMiddleware(function (Middleware $middleware) {
         // CORS must run FIRST
-        $middleware->append(\App\Http\Middleware\DebugRequest::class);
+        //$middleware->append(\App\Http\Middleware\DebugRequest::class);
         $middleware->append(HandleCors::class);
         $middleware->statefulApi();
 
@@ -44,4 +44,4 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })->create(); 

@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
-use Exception;
+use App\Models\MpesaResponse;
 use Carbon\Carbon;
+use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class MpesaService 
 {
@@ -25,6 +27,8 @@ class MpesaService
         $this->passkey       = config('mpesa.passkey');
         $this->callbackUrl   = config('mpesa.callback_url');
     }
+
+    
 
     public function getAccessToken()
     {
@@ -54,7 +58,6 @@ class MpesaService
     public function initiateSTK(string $number, int $amount=1)
     {
         try{
-            
             $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
             $accessToken = $this->getAccessToken();
             $timestamp = Carbon::now('Africa/Nairobi')->format('YmdHis');
@@ -79,58 +82,29 @@ class MpesaService
                 'PartyA' => $number,
                 'PartyB' => $this->shortcode,
                 'PhoneNumber' => $number,
-                'CallBackURL' => $this->callbackUrl,
+                'CallBackURL' => 'https://d0b6-102-215-12-253.ngrok-free.app/api/mpesa/confirm',
                 'AccountReference' => 'Rent',
                 'TransactionDesc' => 'PLU'
             ];
-            $ch = curl_init();
-
-            curl_setopt_array($ch, array(
-                CURLOPT_URL => $url,
-                CURLOPT_POST => true,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => $requestHeaders,
-                CURLOPT_POSTFIELDS => json_encode($data),
-
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-            )); 
-
-            $response = curl_exec($ch);
-
-            //Log::channel('mpesa')->info('STK Request initiated');
-
-            if (curl_errno($ch)) {
-                $error = 'Error: ' . curl_error($ch);
-                curl_close($ch);
-                return ['error' => $error];
+            $response = Http::withToken($accessToken)->post($url, $data);
+            if($response->failed()){
+                return ['error'=> $response->body()];
             }
-
-            curl_close($ch);
-            $newMpesaResponse = '';
-            $responseBody = json_decode($response, true);
-            /*if($responseBody['ResponseCode'] == '0'){
-                $newMpesaResponse = Mpesaresponse::create([
+            $responseBody = $response->json();
+            if($responseBody['ResponseCode'] === '0'){
+                $newMpesaResponse = MpesaResponse::create([
                     "MerchantRequestID"=>$responseBody['MerchantRequestID'],
                     "CheckoutRequestID"=>$responseBody['CheckoutRequestID'],
                     "ResponseCode"=>$responseBody['ResponseCode'],
                     "ResponseDescription"=>$responseBody['ResponseDescription'],
                     "CustomerMessage"=>$responseBody['CustomerMessage'],
                 ]);
-            }*/
-
-            //return json_decode($response, true);
-
-            /*$response = $client->post($url, [
-                'headers' => $requestHeaders,
-                'json' => $data, // Sends data as JSON
-            ]);*/
+            }
             return $responseBody;
-
-
 
         }catch(Exception $e){
             $response = ['error'=>$e->getMessage(), 'code'=>3];
+            Log::info('error', $response);
             return response ($response, 500);
         }
     }

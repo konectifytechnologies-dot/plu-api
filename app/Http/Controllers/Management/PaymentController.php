@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Management;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\PaymentResource;
 use App\Models\AdditionalCost;
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Property;
 use App\Queries\AppQuery;
@@ -32,15 +34,20 @@ class PaymentController extends ApiController
         return response(['token', $token]);
     }
 
-    public function stkPush()
+    public function stkPush(Request $request)
     {
-        $body = $this->mpesa->initiateSTK('254705180969', 1);
+        $request->validate([
+            'number'=> ['required', 'string'],
+            'amount'=>['required', 'integer']
+        ]);
+        $number = formatKenyanPhone($request->number);
+        $body = $this->mpesa->initiateSTK($number, $request->amount);
         return response($body);
     }
 
     public function smsid(){
         $body = $this->mpesa->getAccessToken();
-        return response($body);
+        return response($body); 
     }
 
     public function payments(Request $request)
@@ -240,6 +247,22 @@ class PaymentController extends ApiController
         try{
             $costs = AdditionalCost::where('property_id', $id)->get();
             return response($costs, 200);
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
+        }
+    }
+
+    public function invoice(string $id)
+    {
+        try{
+            $invoice = Invoice::with([
+                'items',
+                'property.agent'
+            ])->where('id', $id)->firstOrFail();
+            $item = new InvoiceResource($invoice);
+            return response($item, 200);
 
         }catch(Exception $e){
             $error = $e->getMessage();

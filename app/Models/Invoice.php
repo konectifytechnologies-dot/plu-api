@@ -32,7 +32,12 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
-    protected function casts(): mixed
+    public function property()
+    {
+        return $this->belongsTo(Property::class);
+    }
+
+    protected function casts(): mixed 
     {
         return ['invoice_reminder_data'=>'array'];
     }

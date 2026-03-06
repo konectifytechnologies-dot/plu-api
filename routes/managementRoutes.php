@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/sms', [PaymentController::class, 'smsid']);
 Route::get('/all-tenants', [UnitController::class, 'alltenants']);
+Route::get('/invoice/{id}', [PaymentController::class, 'invoice']);
+Route::post('/mpesa/payment', [PaymentController::class, 'stkPush']);
 
 Route::middleware(['auth:sanctum', 'throttle:authenticated'])->group(function () {
     Route::get('/properties', [PropertyController::class, 'index']);
