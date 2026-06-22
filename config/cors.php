@@ -24,7 +24,7 @@ return [
     ],
 
     'allowed_methods' => ['*'],
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000 ', 'https://pludevelopers.co.ke', 'https://api.pludevelopers.co.ke')],
+    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000 ', 'https://developersapp.disqav.com', 'https://developers.disqav.com')],
 
 
     'allowed_origins_patterns' => [],

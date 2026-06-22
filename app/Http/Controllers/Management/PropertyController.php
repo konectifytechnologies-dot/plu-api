@@ -106,10 +106,10 @@ class PropertyController extends ApiController
                     $extension = $file->getClientOriginalExtension();
                     $name = $file->getClientOriginalName();
                     $filename = Str::random(8) . '.' . $extension;
-                    $folderPath = 'plu/';
+                    $folderPath = 'developers/';
 
                     $path =  Storage::disk('s3')->putFileAs($folderPath, $file, $filename);
-                    $imageUrl = 'plu/'.$filename;
+                    $imageUrl = 'developers/'.$filename;
                 }catch(Exception $e){
                     $error = $e->getMessage();
                     return $this->error($error);
