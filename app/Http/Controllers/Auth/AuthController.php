@@ -175,12 +175,19 @@ class AuthController extends ApiController
      */
     public function me(Request $request)
     {
-        $user = $request->user();
-        if(!$user || $user == 'undefined'){
-            return response(['error'=>'User Unauthenticated', 'code'=>3]);
+        try{
+            $user = $request->user();
+
+            if(!$user || $user == 'undefined'){
+                return response(['error'=>'User Unauthenticated', 'code'=>3]);
+            }
+            $data = new UserResource($user);
+            return response($data, 200);
+
+        }catch(Exception $e){
+            $error = $e->getMessage();
+            return $this->error($error);
         }
-        $data = new UserResource($user);
-        return response($data, 200);
         //return $this->success(new UserResource($request->user()));
     }
     /**
