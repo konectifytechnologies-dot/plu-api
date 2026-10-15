@@ -23,16 +23,17 @@ return [
         'api/*',
     ],
 
-    'allowed_methods' => ['*'],
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000 ', 'https://developersapp.disqav.com', 'https://developers.disqav.com')],
-
+    'allowed_origins' => [
+        env('CORS_ALLOWED_ORIGINS', 
+        'http://localhost:3000'),
+        'https://app.pludevelopers.co.ke',
+    ],
+ 
 
     'allowed_origins_patterns' => [],
-    'exposed_headers' => ['XSRF-TOKEN'],
+    'exposed_headers' => [],
 
     'allowed_headers' => ['*'],
-
-    'exposed_headers' => [],
 
     'max_age' => 0,
 
